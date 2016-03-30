@@ -27,14 +27,9 @@ In ./scraper/secret:
 const secretPath = path.resolve('./scraper/secret');
 const busStops = readJson('./scraper/bus-stops.json');
 const baseUrl = 'http://datamall2.mytransport.sg/ltaodataservice/BusArrival';
-const busStopId = '83139' // TODO get array from bus stops.json
 // let url = `${baseUrl}?BusStopID=${busStopId}`
 const headers = Object.assign({}, {'accept':'application/json', 'cache-control': 'no-cache',},
     readJson(secretPath));
-const options = { method: 'GET',
-  url: baseUrl,
-  qs: { BusStopID: busStopId },
-  headers };
 
 function getFormattedData(service, bus){
     const {ServiceNo, Status, Operator} = service;
@@ -49,6 +44,11 @@ function writeFormattedData(busStopCode, service, bus) {
 }
 
 function requestBusStopInfo(busStopCode){
+    const options = { method: 'GET',
+      url: baseUrl,
+      qs: { BusStopID: busStopCode },
+      headers 
+    };
     request(options, (err, res, body)=>{
         if (!err && res.statusCode == 200) {
             const services = JSON.parse(body).Services;
@@ -72,7 +72,8 @@ function getStopsFromServices(requestedServices) {
     }))
 }
 
-// const stops = getStopsFromServices(['5']) // 119 stops
-// console.log(stops)
+const stops = getStopsFromServices(['2']) // 124 stops
 
-requestBusStopInfo(busStopId)
+stops.forEach((code)=>{
+    requestBusStopInfo(code)
+})
