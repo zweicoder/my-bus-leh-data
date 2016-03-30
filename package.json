@@ -26,7 +26,7 @@
   "description": "Component to get data for locations of bus in Singapore",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jiahaog/my-bus-leh.git"
+    "url": "git+https://github.com/zweicoder/my-bus-leh-data.git"
   },
   "keywords": [
     "bus",
