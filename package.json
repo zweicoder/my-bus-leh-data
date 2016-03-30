@@ -1,0 +1,39 @@
+{
+  "name": "my-bus-leh-data",
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "scrape": "babel ./scraper/scraper.js -s -o ./scraper/scraper-c.js && node ./scraper/scraper-c.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.9.1",
+    "lodash": "^4.6.1",
+    "node-fetch": "^1.4.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.3.17",
+    "babel-preset-es2015": "^6.3.13"
+  },
+  "private": true,
+  "babel": {
+    "presets": [
+      "es2015"
+    ]
+  },
+  "description": "Component to get data for locations of bus in Singapore",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jiahaog/my-bus-leh.git"
+  },
+  "keywords": [
+    "bus",
+    "transport",
+    "location",
+    "map",
+    "web",
+    "app"
+  ]
+}
