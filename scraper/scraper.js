@@ -34,7 +34,7 @@ const headers = Object.assign({}, {'accept':'application/json', 'cache-control':
 function getFormattedData(service, bus){
     const {ServiceNo, Status, Operator} = service;
 
-    return Object.assign({}, {ServiceNo, Status, Operator}, bus)
+    return Object.assign({}, {ServiceNo, Status, Operator, date: new Date()}, bus)
 }
 
 function writeFormattedData(busStopCode, service, bus) {
@@ -74,6 +74,7 @@ function getStopsFromServices(requestedServices) {
 
 const stops = getStopsFromServices(['2']) // 124 stops
 
+// requestBusStopInfo("83139")
 stops.forEach((code)=>{
     requestBusStopInfo(code)
 })
