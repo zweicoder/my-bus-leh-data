@@ -3,6 +3,7 @@ import path from 'path'
 import request from 'request'
 import pickBy from 'lodash/pickBy'
 import keys from 'lodash/keys'
+import find from 'lodash/find'
 
 // Make data folder
 function mkdirIfNotExists(dir){
@@ -31,19 +32,24 @@ const baseUrl = 'http://datamall2.mytransport.sg/ltaodataservice/BusArrival';
 const headers = Object.assign({}, {'accept':'application/json', 'cache-control': 'no-cache',},
     readJson(secretPath));
 
-function getFormattedData(service, bus){
+function getFormattedData(service, bus, direction){
     const {ServiceNo, Status, Operator} = service;
 
-    return Object.assign({}, {ServiceNo, Status, Operator, date: new Date(), cDate: Date()}, bus)
+    return Object.assign({}, {ServiceNo, Status, Operator, direction, date: new Date(), cDate: Date()}, bus)
 }
 
-function writeFormattedData(busStopCode, service, bus) {
-    const formatted=  getFormattedData(service, bus)
+function writeFormattedData(busStopCode, service, bus, direction) {
+    if (bus.Longitude === '0' || bus.Longitude === '' || bus.Latitude === '0' || bus.Latitude === '') {
+        return;
+    }
+
+    const {ServiceNo, Status, Operator} = service;
+    const formatted = Object.assign({}, {ServiceNo, Status, Operator, direction, date: new Date(), cDate: Date()}, bus)
     // console.log(formatted)
     fs.appendFile(`./data/${busStopCode}.json`,JSON.stringify(formatted)+',\n');
 }
 
-function requestBusStopInfo(busStopCode){
+function requestBusStopInfo(busStopCode, direction) {
     const options = { method: 'GET',
       url: baseUrl,
       qs: { BusStopID: busStopCode },
@@ -53,27 +59,38 @@ function requestBusStopInfo(busStopCode){
         if (!err && res.statusCode == 200) {
             const services = JSON.parse(body).Services;
             services.forEach((service)=>{
-                writeFormattedData(busStopCode, service, service.NextBus);
-                writeFormattedData(busStopCode, service, service.SubsequentBus);
-                writeFormattedData(busStopCode, service, service.SubsequentBus3);
+                writeFormattedData(busStopCode, service, service.NextBus, direction);
+                writeFormattedData(busStopCode, service, service.SubsequentBus, direction);
+                writeFormattedData(busStopCode, service, service.SubsequentBus3, direction);
             })
         }
     })
 }
 
-function getStopsFromServices(requestedServices) {
-    console.log('Getting stops for services: ',requestedServices)
-    const servicesAtStops = readJson('./busrouter-data/bus-stops-services.json')
-    return keys(pickBy(servicesAtStops, (services)=>{
-        return services.some((service)=>{
-            // return requestedServices.includes(service)
-            return requestedServices.some((requested)=> requested === service)
+function requestBusServiceInfo({1: mainRoute, 2: returnRoute}){
+    mainRoute.stops.forEach((stop)=>{
+        requestBusStopInfo(stop, 1)
+    })
+
+    if (returnRoute){
+        returnRoute.stops.forEach((stop)=>{
+            requestBusStopInfo(stop, 2)
         })
-    }))
+    }
 }
 
-const stops = getStopsFromServices(['2']) // 124 stops
+function getBusServices(requestedServices) {
+    console.log('Getting info for services: ',requestedServices)
+    const files = fs.readdirSync('./busrouter-data/bus-services')
+    const wantedFiles = files.filter((file)=>{
+        return requestedServices.some((requested)=>`${requested}.json` === file)
+    })
 
-stops.forEach((code)=>{
-    requestBusStopInfo(code)
+    return wantedFiles.map((file)=> readJson(path.resolve('./busrouter-data/bus-services', file)))
+}
+
+const services = getBusServices(['2']) // 124 stops
+// console.log(stops)
+services.forEach((service)=>{
+    requestBusServiceInfo(service)
 })
