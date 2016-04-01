@@ -18,14 +18,14 @@ function readJson(path) {
 mkdirIfNotExists('./data')
 
 /***
-In ./scraper/secret:
+In ./secret:
 {
 "AccountKey":"<your-key-here>",
 "UniqueUserId":"<your-GUID-here>"
 }
 ***/
-const secretPath = path.resolve('./scraper/secret');
-const busStops = readJson('./scraper/bus-stops.json');
+const secretPath = path.resolve('./secret');
+const busStops = readJson('./busrouter/data/2/bus-stops.json');
 const baseUrl = 'http://datamall2.mytransport.sg/ltaodataservice/BusArrival';
 // let url = `${baseUrl}?BusStopID=${busStopId}`
 const headers = Object.assign({}, {'accept':'application/json', 'cache-control': 'no-cache',},
@@ -34,7 +34,7 @@ const headers = Object.assign({}, {'accept':'application/json', 'cache-control':
 function getFormattedData(service, bus){
     const {ServiceNo, Status, Operator} = service;
 
-    return Object.assign({}, {ServiceNo, Status, Operator, date: new Date()}, bus)
+    return Object.assign({}, {ServiceNo, Status, Operator, date: new Date(), cDate: Date()}, bus)
 }
 
 function writeFormattedData(busStopCode, service, bus) {
@@ -63,7 +63,7 @@ function requestBusStopInfo(busStopCode){
 
 function getStopsFromServices(requestedServices) {
     console.log('Getting stops for services: ',requestedServices)
-    const servicesAtStops = readJson('./scraper/bus-stops-services.json')
+    const servicesAtStops = readJson('./busrouter/data/2/bus-stops-services.json')
     return keys(pickBy(servicesAtStops, (services)=>{
         return services.some((service)=>{
             // return requestedServices.includes(service)
@@ -74,7 +74,6 @@ function getStopsFromServices(requestedServices) {
 
 const stops = getStopsFromServices(['2']) // 124 stops
 
-// requestBusStopInfo("83139")
 stops.forEach((code)=>{
     requestBusStopInfo(code)
 })

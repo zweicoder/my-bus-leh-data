@@ -4,7 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "scrape": "babel ./scraper/scraper.js -s -o ./scraper/scraper-c.js && node ./scraper/scraper-c.js"
+    "watch": "babel src -d lib --watch",
+    "start": "node ./lib/scraper.js",
+    "scrape": "babel src -d lib && node ./lib/scraper.js"
   },
   "author": "",
   "license": "MIT",
