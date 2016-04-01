@@ -25,7 +25,7 @@ In ./secret:
 }
 ***/
 const secretPath = path.resolve('./secret');
-const busStops = readJson('./busrouter/data/2/bus-stops.json');
+const busStops = readJson('./busrouter-data/bus-stops.json');
 const baseUrl = 'http://datamall2.mytransport.sg/ltaodataservice/BusArrival';
 // let url = `${baseUrl}?BusStopID=${busStopId}`
 const headers = Object.assign({}, {'accept':'application/json', 'cache-control': 'no-cache',},
@@ -63,7 +63,7 @@ function requestBusStopInfo(busStopCode){
 
 function getStopsFromServices(requestedServices) {
     console.log('Getting stops for services: ',requestedServices)
-    const servicesAtStops = readJson('./busrouter/data/2/bus-stops-services.json')
+    const servicesAtStops = readJson('./busrouter-data/bus-stops-services.json')
     return keys(pickBy(servicesAtStops, (services)=>{
         return services.some((service)=>{
             // return requestedServices.includes(service)
