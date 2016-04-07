@@ -6,6 +6,18 @@ import keys from 'lodash/keys'
 import find from 'lodash/find'
 import writeMapping from './busStopsToLatLon.js'
 
+var elastic = require('./elasticsearch')
+elastic.ping();
+
+elastic.indexExists().then(function (exists) {
+  if (exists) {
+    return elastic.deleteIndex();
+  }
+}).then(function () {
+  return elastic.initIndex().then(elastic.initMapping)
+});
+
+
 // Make data folder
 function mkdirIfNotExists(dir){
     if (!fs.existsSync(dir)){
@@ -32,13 +44,13 @@ const mapping =  readJson('./busrouter-data/busStopLatLon.json')
 function getDistanceFromLatLonInKm({lat: lat1,lon: lon1}, {lat: lat2,lon: lon2}) {
   var R = 6371; // Radius of the earth in km
   var dLat = deg2rad(lat2-lat1);  // deg2rad below
-  var dLon = deg2rad(lon2-lon1); 
-  var a = 
+  var dLon = deg2rad(lon2-lon1);
+  var a =
     Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
     Math.sin(dLon/2) * Math.sin(dLon/2)
-    ; 
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    ;
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   var d = R * c; // Distance in km
   return d;
 }
@@ -54,26 +66,28 @@ function writeFormattedData(busStopCode, service, bus) {
 
     const {ServiceNo, Status, Operator} = service;
     const distance = getDistanceFromLatLonInKm(
-        {lat: bus.Latitude, lon: bus.Longitude}, 
+        {lat: bus.Latitude, lon: bus.Longitude},
         mapping[busStopCode]
         )
     const formatted = Object.assign({}, {
-        ServiceNo, 
-        Status, 
-        Operator, 
+        ServiceNo,
+        Status,
+        Operator,
         date: new Date(),
         busStopCode,
         distance
     }, bus, {EstimatedArrival: new Date(bus.EstimatedArrival)})
 
     fs.appendFile(`./data/data.json`,JSON.stringify(formatted)+',\n');
+    //elastic.addDocument(formatted).then(function(result){console.log(result)});
+    // elastic.indexExists().then(elastic.addDocument(formatted));
 }
 
 function requestBusStopInfo(busStopCode, wantedServices) {
     const options = { method: 'GET',
       url: baseUrl,
       qs: { BusStopID: busStopCode },
-      headers 
+      headers
     };
     request(options, (err, res, body)=>{
         if (!err && res.statusCode == 200) {
